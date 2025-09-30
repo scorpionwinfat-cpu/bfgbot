@@ -1,0 +1,27 @@
+{
+  "users": {
+    "251336645": {
+      "id": 251336645,
+      "id_field": "Создать пост",
+      "inn": "2724079827"
+    }
+  },
+  "reminders": [
+    {
+      "user_id": 251336645,
+      "guarantee_number": "0122300006125000846",
+      "due_date": "2028-08-31",
+      "offset_days": 30,
+      "remind_on": "2028-08-01",
+      "sent": false
+    },
+    {
+      "user_id": 251336645,
+      "guarantee_number": "0122300006125000846",
+      "due_date": "2028-08-31",
+      "offset_days": 7,
+      "remind_on": "2028-08-24",
+      "sent": false
+    }
+  ]
+}
