@@ -97,25 +97,21 @@ def _find_first(body: Dict[str, Any], key_variants: Iterable[str]) -> str:
                     return val
     return ""
 
-NAME_KEYS    = [
-    "НаимЮЛПолн",
-    "Наименование",
-    "name",
-    "full_name",
-    "egrul.name.full",
-    "egrul_name",
-    "НаимПолн",
-    "egrip.fio.full",
-    "egrip.fio",
-    "egrip.name.full",
-    "ФИОПолн",
-    "ФИО",
-    "fio.full",
-    "fio_full",
-    "fio.full_name",
-    "fio.fullname",
-    "fio",
-]
+NAME_KEYS    = ["НаимЮЛПолн", "Наименование", "name", "full_name", "egrul.name.full", "egrul_name", "НаимПолн"]
+NAME_KEYS.extend(
+    [
+        "egrip.fio.full",
+        "egrip.fio",
+        "egrip.name.full",
+        "ФИОПолн",
+        "ФИО",
+        "fio.full",
+        "fio_full",
+        "fio.full_name",
+        "fio.fullname",
+        "fio",
+    ]
+)
 INN_KEYS     = ["ИНН", "inn"]
 OGRN_KEYS    = ["ОГРН", "ogrn"]
 KPP_KEYS     = ["КПП", "kpp"]
