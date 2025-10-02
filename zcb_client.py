@@ -45,23 +45,77 @@ def _walk(d: Any) -> Iterable[tuple[str, Any]]:
                     yield f"[{i}].{kk}", vv
             yield f"[{i}]", v
 
+def _stringify_value(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, (str, int, float)):
+        return str(value)
+    if isinstance(value, list):
+        parts = [part for part in (_stringify_value(v) for v in value) if part]
+        return " ".join(parts)
+    if isinstance(value, dict):
+        lower_keys = {k.lower(): v for k, v in value.items()}
+        fio_parts: list[str] = []
+        fio_key_groups = (
+            ("last", "surname", "family", "last_name"),
+            ("first", "name", "given", "first_name"),
+            ("middle", "patronymic", "mid", "middle_name"),
+        )
+        for group in fio_key_groups:
+            for key in group:
+                if key in lower_keys:
+                    part = _stringify_value(lower_keys[key])
+                    if part:
+                        fio_parts.append(part)
+                    break
+        if fio_parts:
+            return " ".join(fio_parts)
+        # fallback: склеим все строковые значения словаря
+        return " ".join(
+            part for part in (_stringify_value(v) for v in value.values()) if part
+        )
+    return ""
+
+
 def _find_first(body: Dict[str, Any], key_variants: Iterable[str]) -> str:
     """Ищем значение по набору синонимов ключей (регистронезависимо), проходим глубоко."""
     low_map = {}
     for k, v in _walk(body):
         low_map[k.lower()] = v
     for pat in key_variants:
+        key = pat.lower()
         # точное совпадение
-        if pat.lower() in low_map and isinstance(low_map[pat.lower()], (str, int, float)):
-            val = low_map[pat.lower()]
-            return str(val)
+        if key in low_map:
+            val = _stringify_value(low_map[key])
+            if val:
+                return val
         # частичное (ключ содержит слово), чтобы поймать, например, egrul.name.full
         for k, v in low_map.items():
-            if pat.lower() in k and isinstance(v, (str, int, float)):
-                return str(v)
+            if key in k:
+                val = _stringify_value(v)
+                if val:
+                    return val
     return ""
 
-NAME_KEYS    = ["НаимЮЛПолн", "Наименование", "name", "full_name", "egrul.name.full", "egrul_name", "НаимПолн"]
+NAME_KEYS    = [
+    "НаимЮЛПолн",
+    "Наименование",
+    "name",
+    "full_name",
+    "egrul.name.full",
+    "egrul_name",
+    "НаимПолн",
+    "egrip.fio.full",
+    "egrip.fio",
+    "egrip.name.full",
+    "ФИОПолн",
+    "ФИО",
+    "fio.full",
+    "fio_full",
+    "fio.full_name",
+    "fio.fullname",
+    "fio",
+]
 INN_KEYS     = ["ИНН", "inn"]
 OGRN_KEYS    = ["ОГРН", "ogrn"]
 KPP_KEYS     = ["КПП", "kpp"]
