@@ -45,25 +45,61 @@ def _walk(d: Any) -> Iterable[tuple[str, Any]]:
                     yield f"[{i}].{kk}", vv
             yield f"[{i}]", v
 
+def _last_segment(path: str) -> str:
+    """Возвращает последний сегмент ключа (без индексов списков)."""
+    # убираем индексы вида [0]
+    cleaned = re.sub(r"\[\d+\]", "", path)
+    return cleaned.rsplit(".", 1)[-1]
+
+
 def _find_first(body: Dict[str, Any], key_variants: Iterable[str]) -> str:
     """Ищем значение по набору синонимов ключей (регистронезависимо), проходим глубоко."""
     low_map = {}
     for k, v in _walk(body):
-        low_map[k.lower()] = v
+        if isinstance(v, (str, int, float)):
+            low_map[k.lower()] = v
     for pat in key_variants:
+        pat_low = pat.lower()
         # точное совпадение
-        if pat.lower() in low_map and isinstance(low_map[pat.lower()], (str, int, float)):
-            val = low_map[pat.lower()]
-            return str(val)
+        if pat_low in low_map:
+            return str(low_map[pat_low])
+
+        preferred_match = None
+        fallback_match = None
+
         # частичное (ключ содержит слово), чтобы поймать, например, egrul.name.full
         for k, v in low_map.items():
-            if pat.lower() in k and isinstance(v, (str, int, float)):
-                return str(v)
+            if pat_low not in k:
+                continue
+
+            last = _last_segment(k).lower()
+            if last.endswith("_date"):
+                continue
+
+            if last == pat_low:
+                preferred_match = str(v)
+                break
+
+            if fallback_match is None:
+                fallback_match = str(v)
+
+        if preferred_match is not None:
+            return preferred_match
+        if fallback_match is not None:
+            return fallback_match
     return ""
 
 NAME_KEYS    = ["НаимЮЛПолн", "Наименование", "name", "full_name", "egrul.name.full", "egrul_name", "НаимПолн"]
 INN_KEYS     = ["ИНН", "inn"]
-OGRN_KEYS    = ["ОГРН", "ogrn"]
+OGRN_KEYS    = [
+    "ОГРН",
+    "ogrn",
+    "ОГРНИП",
+    "ogrnip",
+    "egrip.ogrn",
+    "egrip.ogrnip",
+    "ip.ogrn",
+]
 KPP_KEYS     = ["КПП", "kpp"]
 STATUS_KEYS  = ["Статус", "status", "egrul.status"]
 ADDRESS_KEYS = ["АдресПолн", "Адрес", "address", "addr", "egrul.address"]
